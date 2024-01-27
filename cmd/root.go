@@ -95,5 +95,7 @@ func initConfig() {
 }
 
 func rootRun(cmd *cobra.Command, args []string) {
-
+	if os.Getpid() == 1 {
+		go reap()
+	}
 }
