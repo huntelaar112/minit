@@ -40,6 +40,6 @@ func reap() {
 			Logger.Error("wait4() returned ECHILD")
 			continue
 		}
-		Logger.Info("pid %d, finished, wstatus: %+v", pid, wstatus)
+		Logger.Info("pid ", pid, "finished, wstatus: ", wstatus)
 	}
 }
