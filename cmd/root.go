@@ -41,7 +41,8 @@ func Execute() {
 }
 
 func init() {
-	utils.InitLogger(LogFile, Logger, LogLevel)
+	//utils.InitLogger(LogFile, Logger, LogLevel)
+	utils.InitLoggerStdout(Logger, log.InfoLevel)
 	cobra.OnInitialize(initConfig)
 
 	// Here you will define your flags and configuration settings.
@@ -80,7 +81,7 @@ func initConfig() {
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			log.Error("config.toml file at ./ folder is not exist. Create it first.")
+			Logger.Error("config.toml file at ./ folder is not exist. Create it first.")
 		} else {
 			Logger.Error(err)
 		}
