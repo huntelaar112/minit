@@ -19,7 +19,14 @@ var (
 	LogLevel       = log.ErrorLevel
 	LogFile        = "minit.log"
 	cfgFileDefault = ".minit"
+
+	global Global
 )
+
+type Global struct {
+	logDir   string
+	entryDir string
+}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -45,15 +52,10 @@ func init() {
 	utils.InitLoggerStdout(Logger, log.InfoLevel)
 	cobra.OnInitialize(initConfig)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.minit.yaml)")
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	viper.SetDefault("logDir", "/var/log/minit")
+	viper.SetDefault("entryDir", "/etc/minit-start")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -92,6 +94,32 @@ func initConfig() {
 
 func rootRun(cmd *cobra.Command, args []string) {
 	if os.Getpid() == 1 {
-		go reap()
+		go Reap()
+	}
+
+	global.logDir = viper.GetString("logDir")
+	global.entryDir = viper.GetString("entryDir")
+
+	// create logDir
+	if _, err := os.Stat(global.logDir); err != nil {
+		if os.IsNotExist(err) {
+			err := utils.DirCreate(global.logDir, 0755)
+			if err != nil {
+				Logger.Error(err)
+			}
+		} else {
+			Logger.Error(err)
+		}
+	}
+
+	// search file in entryDir
+	listEntryFile, err := utils.DirAllChild(global.entryDir)
+	if err != nil {
+		Logger.Error(err)
+	}
+	if len(listEntryFile) <= 0 {
+		Logger.Info(global.logDir, ": Entry_directory is empty.")
+	} else {
+
 	}
 }

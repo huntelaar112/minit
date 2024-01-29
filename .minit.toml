@@ -1,0 +1,2 @@
+#logDir="/var/log/minit"
+entryDir="/etc/minit"

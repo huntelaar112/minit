@@ -9,7 +9,8 @@ import (
 	"syscall"
 )
 
-func childSignal(notify chan bool) {
+// relay SIGCHID to minit to c channel.
+func ChildSignal(notify chan bool) {
 	var sigs = make(chan os.Signal, 3)
 	signal.Notify(sigs, syscall.SIGCHLD)
 
@@ -23,11 +24,11 @@ func childSignal(notify chan bool) {
 	}
 }
 
-func reap() {
+func Reap() {
 	var wstatus syscall.WaitStatus
 	notify := make(chan bool, 1)
 
-	go childSignal(notify)
+	go ChildSignal(notify)
 
 	for {
 		pid, err := syscall.Wait4(-1, &wstatus, 0, nil)
