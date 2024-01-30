@@ -55,7 +55,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.minit.yaml)")
 
 	viper.SetDefault("logDir", "/var/log/minit")
-	viper.SetDefault("entryDir", "/etc/minit-start")
+	viper.SetDefault("entryDir", "/etc/minit")
 }
 
 // initConfig reads in config file and ENV variables if set.
