@@ -72,7 +72,7 @@ func (c *Procs) Signal(sig os.Signal) {
 	c.RLock()
 	defer c.RUnlock()
 	for pid, cmd := range c.pids {
-		Logger.Info("signal ", sig, "sent to pid ", pid)
+		Logger.Info("signal ", sig, " sent to pid ", pid)
 		cmd.Process.Signal(sig)
 	}
 }
