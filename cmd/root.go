@@ -151,7 +151,7 @@ func GetCommandsFormFilesofDir(dirPath string) ([]*exec.Cmd, error) {
 		if err != nil {
 			return cmds, err
 		} else {
-			Logger.Info("Folder ", global.entryDir, "is created")
+			Logger.Infof("Folder %s is created", global.entryDir)
 		}
 	}
 	if len(listEntryFile) <= 0 {
@@ -194,7 +194,7 @@ func RunCmds(cmds []*exec.Cmd, procs *Procs) {
 				}
 				fallthrough
 			case nil: // if nil or err is *os.SyscallError type.
-				Logger.Info("pid ", pid, " finished: ", cmd.Args)
+				Logger.Infof("pid %d finished %v", pid, cmd.Args)
 			}
 			procs.Remove(cmd)
 		}()
@@ -202,7 +202,7 @@ func RunCmds(cmds []*exec.Cmd, procs *Procs) {
 }
 
 func Wait(procs *Procs) {
-	defer func() { Logger.Println("all processes exited, goodbye!") }()
+	defer func() { Logger.Info("all processes exited, goodbye!") }()
 
 	// wait trigger of interrupt signal
 	ints := make(chan os.Signal, 2)
