@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-source /imageBuild/buildconfig
+source /build-minit/buildconfig
 set -x
 
 SSHD_BUILD_PATH=/imageBuild/services/sshd

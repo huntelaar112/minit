@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
-source /imageBuild/buildconfig
+source /build-minit/buildconfig
 set -x
 
 apt-get clean
-find /imageBuild/ -not \( -name 'bd_build' -or -name 'buildconfig' -or -name 'cleanup.sh' \) -delete
+find /build-minit/ -not \( -name 'bd_build' -or -name 'buildconfig' -or -name 'cleanup.sh' \) -delete
 rm -rf /tmp/* /var/tmp/*
 rm -rf /var/lib/apt/lists/*
 

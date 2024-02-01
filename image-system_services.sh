@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
-source /imageBuild/buildconfig
+source /build-minit/buildconfig
 set -x
 
 ## Install init process.
-cp /imageBuild/minit /sbin/
+#cp /imageBuild/minit /sbin/
 mkdir -p /etc/minit
 #mkdir -p /etc/my_init.pre_shutdown.d
 #mkdir -p /etc/my_init.post_shutdown.d
@@ -46,4 +46,4 @@ ln -s /usr/bin/vim.tiny /usr/bin/vim
 #cp /bd_build/bin/setuser /sbin/setuser
 
 ## This tool allows installation of apt packages with automatic cache cleanup.
-cp /imageBuild/install_clean /sbin/install_clean
+cp /build-minit/install-clean /sbin/install_clean
