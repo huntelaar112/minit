@@ -88,7 +88,7 @@ func initConfig() {
 		cfgFile = cfgFileDefault
 		// Search config in home directory with name ".minit" (without extension).
 		viper.AddConfigPath(home)
-		viper.AddConfigPath("./")
+		//viper.AddConfigPath("./")
 		viper.SetConfigType("toml")
 		viper.SetConfigName(cfgFile)
 	}

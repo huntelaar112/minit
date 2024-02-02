@@ -49,9 +49,9 @@ docker stop "${connname}".old || :
   echo "Use default bridge network."
   docker run -idt --network bridge --ip "${staticip}" \
     -p 4443:443 -p 8080:80 -p 222:22\
-    --restart always \
+    --restart always -e TZ=Asia/Ho_Chi_Minh \
     -e HOSTHOME=/mnt/hosthome \
-    -v ${HOSTHOME}:/mnt/hosthome -e TZ=Asia/Ho_Chi_Minh \
+    -v ${HOSTHOME}:/mnt/hosthome \
     -v ${CDATA}:${CDATA} \
     --name "${connname}" --hostname "${connname}" -itd ${imagebase}
 }
