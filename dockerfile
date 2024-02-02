@@ -18,6 +18,7 @@ ENV TZ=Asia/Ho_Chi_Minh
 
 COPY --from=build ${BUILDDIR} ${BUILDDIR} 
 
+RUN apt-get dist-upgrade -y --no-install-recommends -o Dpkg::Options::="--force-confold"
 RUN chmod +x ${BUILDDIR}/buildconfig && cp ${BUILDDIR}/buildconfig /bin
 RUN ${BUILDDIR}/imageSetup/imagePrepare.sh && \
 	${BUILDDIR}/imageSetup/imageSystemServices.sh && \

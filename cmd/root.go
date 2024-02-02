@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -19,12 +20,16 @@ import (
 )
 
 type Global struct {
-	logDir   string
-	entryDir string
+	logDir      string
+	entryDir    string
+	preStartDir string
 
-	procs          *Procs
-	prim           *Primary
-	etc_minit_cmds []*exec.Cmd
+	wgPostPreStart sync.WaitGroup
+
+	procs                   *Procs
+	prim                    *Primary
+	etc_minit_cmds          []*exec.Cmd
+	etx_minit_prestart_cmds []*exec.Cmd
 
 	timeout2Kill time.Duration
 }
@@ -67,6 +72,7 @@ func init() {
 
 	viper.SetDefault("logDir", "/var/log/minit")
 	viper.SetDefault("entryDir", "/etc/minit")
+	viper.SetDefault("preStartDir", "/etc/minit_prestart")
 
 	global.procs = NewProcs()
 	global.prim = NewPrimary()
@@ -97,7 +103,9 @@ func initConfig() {
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			Logger.Error("config.toml file at ./ folder is not exist. Create it first.")
+			home, _ := os.UserHomeDir()
+			Logger.Errorf("config.toml is not exist %s. Auto create at %s", home, home)
+			viper.WriteConfigAs(home)
 		} else {
 			Logger.Error(err)
 		}
@@ -129,17 +137,25 @@ func rootRun(cmd *cobra.Command, args []string) {
 	if err != nil {
 		Logger.Error(err)
 	} else {
-		Logger.Info("List file at: ", global.entryDir, ":", listDirEtcMinit)
+		Logger.Info("List file at: ", global.entryDir, ": ", listDirEtcMinit)
 	}
 
-	RunCmds(global.etc_minit_cmds, global.procs)
+	listDirEtcMinitPreStart, _ := utils.DirAllChild(global.preStartDir)
+	global.etx_minit_prestart_cmds, err = GetCommandsFormFilesofDir(global.preStartDir)
+	if err != nil {
+		Logger.Error(err)
+	} else {
+		Logger.Info("List file at: ", global.preStartDir, ": ", listDirEtcMinitPreStart)
+	}
 
 	if os.Getpid() == 1 {
 		go Reap()
 	}
-
+	global.wgPostPreStart.Add(1)
+	go PreStartCmdsRun(global.etx_minit_prestart_cmds, global.procs, &global.wgPostPreStart)
+	global.wgPostPreStart.Wait()
+	RunCmds(global.etc_minit_cmds, global.procs)
 	Wait(global.procs)
-
 }
 
 func GetCommandsFormFilesofDir(dirPath string) ([]*exec.Cmd, error) {
@@ -171,6 +187,40 @@ func GetCommandsFormFilesofDir(dirPath string) ([]*exec.Cmd, error) {
 
 // run all cmd, if one end or error die --> print log
 func RunCmds(cmds []*exec.Cmd, procs *Procs) {
+	for i := range cmds {
+		cmd := cmds[i]
+		if err := cmd.Start(); err != nil {
+			Logger.Error("process failed to start: ", err)
+			//procs.Cleanup(syscall.SIGINT, global.timeout2Kill)
+			continue
+		}
+		pid := cmd.Process.Pid
+		Logger.Info("pid ", pid, " started: ", cmd.Args)
+		procs.Insert(cmd)
+
+		go func() {
+			err := cmd.Wait()
+			pid := cmd.Process.Pid
+
+			switch err {
+			default:
+				// is not SyscallError type
+				_, ok := err.(*os.SyscallError)
+				if !ok {
+					Logger.Errorf("pid %d finished: %v with error: %v", pid, cmd.Args, err)
+					break
+				}
+				fallthrough
+			case nil: // if nil or err is *os.SyscallError type.
+				Logger.Infof("pid %d finished %v", pid, cmd.Args)
+			}
+			procs.Remove(cmd)
+		}()
+	}
+}
+
+func PreStartCmdsRun(cmds []*exec.Cmd, procs *Procs, wg *sync.WaitGroup) {
+	defer wg.Done()
 	for i := range cmds {
 		cmd := cmds[i]
 		if err := cmd.Start(); err != nil {
