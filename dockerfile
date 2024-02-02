@@ -1,24 +1,29 @@
+ARG USER=root BUILDDIR="/build"
+
 FROM golang:1.21.6-bookworm as build
+ARG USER BUILDDIR
+CMD /bin/bash
+COPY . ${BUILDDIR}
+#WORKDIR /build-minit 
 
-ARG USER=root
-ADD --chown=${USER}:${USER} . /build-minit 
-WORKDIR /build-minit 
-
-RUN go build -o minit
+RUN cd ${BUILDDIR} && go build -o minit
 
 
-
+################################################
 FROM debian:12.4
 LABEL maintainer="khacman98@gmail.com"
 
-ARG EXPOSE_PORT="80 443"
+ARG USER BUILDDIR EXPOSE_PORT="80 443 22"
 ENV TZ=Asia/Ho_Chi_Minh
 
-COPY --from=build /build-minit /build-minit 
-RUN /build-minit/image-prepare.sh && \
-	/build-minit/image-system_services.sh && \
-	/build-minit/image-cleanup.sh && \
-    cp /build-minit/minit /bin
+COPY --from=build ${BUILDDIR} ${BUILDDIR} 
+
+RUN chmod +x ${BUILDDIR}/buildconfig && cp ${BUILDDIR}/buildconfig /bin
+RUN ${BUILDDIR}/imageSetup/imagePrepare.sh && \
+	${BUILDDIR}/imageSetup/imageSystemServices.sh && \
+    cp ${BUILDDIR}/minit /bin && \
+	${BUILDDIR}/imageSetup/imageCleanup.sh 
+   
 
 ENV DEBIAN_FRONTEND="teletype" \
     LANG="en_US.UTF-8" \

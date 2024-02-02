@@ -1,9 +1,9 @@
 #!/bin/bash
 set -e
-source /imageBuild/buildconfig
+source $(which buildconfig)
 set -x
 
-SYSLOG_NG_BUILD_PATH=/imageBuild/services/syslog-ng
+SYSLOG_NG_BUILD_PATH=${buildDir}/services/syslog-ng
 
 ## Install a syslog daemon.
 $minimal_apt_get_install syslog-ng-core

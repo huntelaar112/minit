@@ -1,10 +1,13 @@
 #!/bin/bash
 set -e
-source /build-minit/buildconfig
+source $(which buildconfig)
 set -x
 
+buildDir="/build"
+
 apt-get clean
-find /build-minit/ -not \( -name 'bd_build' -or -name 'buildconfig' -or -name 'cleanup.sh' \) -delete
+#find ${buildDir} -not \( -name 'minit' -or -name 'buildconfig' -or -name 'cleanup.sh' \) -delete
+rm -rf ${buildDir}
 rm -rf /tmp/* /var/tmp/*
 rm -rf /var/lib/apt/lists/*
 

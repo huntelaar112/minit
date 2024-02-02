@@ -109,10 +109,6 @@ func initConfig() {
 func rootRun(cmd *cobra.Command, args []string) {
 	var err error
 
-	if os.Getpid() == 1 {
-		go Reap()
-	}
-
 	global.logDir = viper.GetString("logDir")
 	global.entryDir = viper.GetString("entryDir")
 
@@ -128,14 +124,20 @@ func rootRun(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	listDirEtcMinit, _ := utils.DirAllChild(global.entryDir)
 	global.etc_minit_cmds, err = GetCommandsFormFilesofDir(global.entryDir)
 	if err != nil {
 		Logger.Error(err)
 	} else {
-		Logger.Info("List file at: ", global.entryDir, ":", global.etc_minit_cmds)
+		Logger.Info("List file at: ", global.entryDir, ":", listDirEtcMinit)
 	}
 
 	RunCmds(global.etc_minit_cmds, global.procs)
+
+	if os.Getpid() == 1 {
+		go Reap()
+	}
+
 	Wait(global.procs)
 
 }
@@ -189,7 +191,7 @@ func RunCmds(cmds []*exec.Cmd, procs *Procs) {
 				// is not SyscallError type
 				_, ok := err.(*os.SyscallError)
 				if !ok {
-					Logger.Info("pid ", pid, " finished: ", cmd.Args, " with error: ", err)
+					Logger.Errorf("pid %d finished: %v with error: %v", pid, cmd.Args, err)
 					break
 				}
 				fallthrough

@@ -1,7 +1,9 @@
 #!/bin/bash
 set -e
-source /build-minit/buildconfig
+source $(which buildconfig)
 set -x
+
+buildDir="/build/"
 
 ## Install init process.
 #cp /imageBuild/minit /sbin/
@@ -24,13 +26,13 @@ ln -s /etc/container_environment.sh /etc/profile.d/
 #$minimal_apt_get_install runit
 
 ## Install a syslog daemon and logrotate.
-[ "$DISABLE_SYSLOG" -eq 0 ] && /imageBuild/services/syslog-ng/syslog-ng.sh || true
+[ "$DISABLE_SYSLOG" -eq 0 ] && ${buildDir}/services/syslog-ng/syslog-ng.sh || true
 
 ## Install the SSH server.
-[ "$DISABLE_SSH" -eq 0 ] && /imageBuild/services/sshd/sshd.sh || true
+[ "$DISABLE_SSH" -eq 0 ] && ${buildDir}/services/sshd/sshd.sh || true
 
 ## Install cron daemon.
-[ "$DISABLE_CRON" -eq 0 ] && /imageBuild/services/cron/cron.sh || true
+[ "$DISABLE_CRON" -eq 0 ] && ${buildDir}/services/cron/cron.sh || true
 
 ## after this script
 # /etc/minit
@@ -39,11 +41,10 @@ ln -s /etc/container_environment.sh /etc/profile.d/
 # install runit
 #!/bin/bash
 ## Often used tools.
-$minimal_apt_get_install curl less vim-tiny psmisc gpg-agent dirmngr nano htop iputils-ping
-ln -s /usr/bin/vim.tiny /usr/bin/vim
+$minimal_apt_get_install curl less vim-tiny psmisc gpg-agent dirmngr nano htop iputils-ping jq
 
+ln -s /usr/bin/vim.tiny /usr/bin/vim
 ## This tool runs a command as another user and sets $HOME.
 #cp /bd_build/bin/setuser /sbin/setuser
-
 ## This tool allows installation of apt packages with automatic cache cleanup.
-cp /build-minit/install-clean /sbin/install_clean
+cp ${buildDir}/imageSetup/install-clean /bin/install_clean

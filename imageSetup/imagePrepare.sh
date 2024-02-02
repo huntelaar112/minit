@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-source /build-minit/buildconfig
+source $(which buildconfig)
 set -x
 
 ## Prevent initramfs updates from trying to run grub and lilo.
@@ -11,7 +11,7 @@ mkdir -p /etc/container_environment
 echo -n no > /etc/container_environment/INITRD
 
 # maybe update sourcelist before.
-apt-get update
+apt update
 
 ## Fix some issues with APT packages.
 ## See https://github.com/dotcloud/docker/issues/1024
