@@ -27,10 +27,10 @@ CDATA=/mnt/containerdata # save data of container
 HOSTHOME=/mnt/containerdata/minit
 
 #docker pull ${imagebase}
-echo "remove ""${connname}"".old container"
+echo "remove ""${connname}"".old container" || :
 docker rm -f "${connname}".old || :
 #docker rename ${connname} ${connname}.old || :
-echo "rename ""${connname}"" to ""${connname}"".old"
+echo "rename ""${connname}"" to ""${connname}"".old" || :
 docker rename "${connname}"{,.old} &>/dev/null || :
 docker stop "${connname}".old || :
 

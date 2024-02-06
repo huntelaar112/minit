@@ -3,11 +3,17 @@ set -e
 source $(which buildconfig)
 set -x
 
+testEnable=${1}
+
 buildDir="/build"
 
 apt-get clean
 #find ${buildDir} -not \( -name 'minit' -or -name 'buildconfig' -or -name 'cleanup.sh' \) -delete
-rm -rf ${buildDir}
+
+[[ "${testEnable}" == "test" ]] && {
+    rm -rf ${buildDir}
+}
+
 rm -rf /tmp/* /var/tmp/*
 rm -rf /var/lib/apt/lists/*
 

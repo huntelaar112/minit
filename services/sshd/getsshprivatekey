@@ -1,0 +1,11 @@
+#!/bin/bash
+set -e
+
+#AUTHORIZED_KEYS=/root/.ssh/authorized_keys
+KEY_NAME="ssh_host_ed25519_key"
+
+[[ -e /etc/ssh/${KEY_NAME} ]] && {
+    cat /etc/ssh/${KEY_NAME}
+} || {
+    echo "/etc/ssh/${KEY_NAME} is not exist"
+}

@@ -216,6 +216,7 @@ func RunCmds(cmds []*exec.Cmd, procs *Procs) {
 
 func PreStartCmdsRun(cmds []*exec.Cmd, procs *Procs, wg *sync.WaitGroup) {
 	defer wg.Done()
+	var prestartProcessWg sync.WaitGroup
 	for i := range cmds {
 		cmd := cmds[i]
 		if err := cmd.Start(); err != nil {
@@ -227,7 +228,10 @@ func PreStartCmdsRun(cmds []*exec.Cmd, procs *Procs, wg *sync.WaitGroup) {
 		Logger.Info("pid ", pid, " started: ", cmd.Args)
 		procs.Insert(cmd)
 
+		// wait all prestart script done before exit PreStartCmdsRun function.
+		prestartProcessWg.Add(1)
 		go func() {
+			defer prestartProcessWg.Done()
 			err := cmd.Wait()
 			pid := cmd.Process.Pid
 
@@ -246,6 +250,7 @@ func PreStartCmdsRun(cmds []*exec.Cmd, procs *Procs, wg *sync.WaitGroup) {
 			procs.Remove(cmd)
 		}()
 	}
+	prestartProcessWg.Wait()
 }
 
 func Wait(procs *Procs) {

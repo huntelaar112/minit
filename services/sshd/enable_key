@@ -2,18 +2,20 @@
 set -e
 
 AUTHORIZED_KEYS=/root/.ssh/authorized_keys
+KEY_NAME="ssh_host_ed25519_key"
 
-if [[ -e "$AUTHORIZED_KEYS" ]] && grep -q baseimage-docker-insecure-key "$AUTHORIZED_KEYS"; then
-	echo "Insecure key has already been added to $AUTHORIZED_KEYS."
+if [[ -e "$AUTHORIZED_KEYS" ]] && grep -q "root@minit" "$AUTHORIZED_KEYS"; then
+	echo "Key has already been added to $AUTHORIZED_KEYS."
 else
-	DIR=$(dirname "$AUTHORIZED_KEYS")
-	echo "Creating directory $DIR..."
-	mkdir -p "$DIR"
-	chmod 700 "$DIR"
-	chown root:root "$DIR"
+	#DIR=$(dirname "$AUTHORIZED_KEYS")
+	#echo "Creating directory $DIR..."
+	#mkdir -p "$DIR"
+	touch "${AUTHORIZED_KEYS}"
+	chmod 600 "$AUTHORIZED_KEYS"
+	chown root:root "$AUTHORIZED_KEYS"
 	echo "Editing $AUTHORIZED_KEYS..."
-	cat /etc/insecure_key.pub >> "$AUTHORIZED_KEYS"
-	echo "Success: insecure key has been added to $AUTHORIZED_KEYS"
+	cat /etc/ssh/${KEY_NAME}.pub >> "$AUTHORIZED_KEYS"
+	echo "Success: ${KEY_NAME} key has been added to $AUTHORIZED_KEYS"
 	cat <<-EOF
 
 		+------------------------------------------------------------------------------+
@@ -21,10 +23,10 @@ else
 		|                                                                              |
 		| DO NOT expose port 22 on the Internet unless you know what you are doing!    |
 		|                                                                              |
-		| Use the private key below to connect with user root                         |
+		| Use the private key below to connect with user root                          |
 		+------------------------------------------------------------------------------+
 
 	EOF
-	cat /etc/insecure_key
+	cat /etc/ssh/${KEY_NAME}
 	echo -e "\n\n"
 fi
