@@ -6,7 +6,8 @@ export DEBIAN_FRONTEND=noninteractive
 export minimal_apt_get_install='apt-get install -y --no-install-recommends'
 
 DISABLE_SYSLOG=1
-DISABLE_SSH=1
+#DISABLE_SSH=1
+
 # Default services
 # Set 1 to the service you want to disable
 export DISABLE_SYSLOG=${DISABLE_SYSLOG:-0}

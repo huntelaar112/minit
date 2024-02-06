@@ -6,7 +6,7 @@ AUTHORIZED_KEYS=/root/.ssh/authorized_keys
 if [[ -e "$AUTHORIZED_KEYS" ]] && grep -q baseimage-docker-insecure-key "$AUTHORIZED_KEYS"; then
 	echo "Insecure key has already been added to $AUTHORIZED_KEYS."
 else
-	DIR=`dirname "$AUTHORIZED_KEYS"`
+	DIR=$(dirname "$AUTHORIZED_KEYS")
 	echo "Creating directory $DIR..."
 	mkdir -p "$DIR"
 	chmod 700 "$DIR"

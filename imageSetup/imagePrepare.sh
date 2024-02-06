@@ -27,13 +27,14 @@ ln -sf /bin/true /sbin/initctl
 #ln -sf /bin/true /usr/bin/ischroot
 
 # apt-utils fix for Ubuntu 16.04
-$minimal_apt_get_install apt-utils
+#$minimal_apt_get_install apt-utils
+apt-get install -y apt-utils apt-transport-https ca-certificates software-properties-common procps
 
 ## Install HTTPS support for APT.
-$minimal_apt_get_install apt-transport-https ca-certificates
+#$minimal_apt_get_install apt-transport-https ca-certificates
 
 ## Install add-apt-repository
-$minimal_apt_get_install software-properties-common
+#$minimal_apt_get_install software-properties-common
 
 ## Upgrade all packages.
 #apt-get dist-upgrade -y --no-install-recommends -o Dpkg::Options::="--force-confold"

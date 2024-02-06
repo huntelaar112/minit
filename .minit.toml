@@ -1,2 +1,3 @@
-#logDir="/var/log/minit"
+logDir="/var/log/minit"
 entryDir="/etc/minit"
+preStartDir="/etc/minit_prestart"

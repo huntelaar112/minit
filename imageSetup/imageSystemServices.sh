@@ -8,6 +8,7 @@ buildDir="/build/"
 ## Install init process.
 #cp /imageBuild/minit /sbin/
 mkdir -p /etc/minit
+mkdir -p /etc/minit_prestart
 #mkdir -p /etc/my_init.pre_shutdown.d
 #mkdir -p /etc/my_init.post_shutdown.d
 mkdir -p /etc/container_environment
@@ -41,7 +42,8 @@ ln -s /etc/container_environment.sh /etc/profile.d/
 # install runit
 #!/bin/bash
 ## Often used tools.
-$minimal_apt_get_install curl less vim-tiny psmisc gpg-agent dirmngr nano htop iputils-ping jq
+#$minimal_apt_get_install curl less vim-tiny psmisc gpg-agent dirmngr nano htop iputils-ping jq
+apt-get install -y curl less vim-tiny psmisc gpg-agent dirmngr nano htop iputils-ping jq
 
 ln -s /usr/bin/vim.tiny /usr/bin/vim
 ## This tool runs a command as another user and sets $HOME.

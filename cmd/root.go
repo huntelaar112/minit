@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"sync"
 	"syscall"
 	"time"
@@ -29,7 +30,7 @@ type Global struct {
 	procs                   *Procs
 	prim                    *Primary
 	etc_minit_cmds          []*exec.Cmd
-	etx_minit_prestart_cmds []*exec.Cmd
+	etc_minit_prestart_cmds []*exec.Cmd
 
 	timeout2Kill time.Duration
 }
@@ -37,7 +38,7 @@ type Global struct {
 var (
 	cfgFile        string
 	Logger         = log.New()
-	LogLevel       = log.ErrorLevel
+	LogLevel       = log.InfoLevel
 	LogFile        = "minit.log"
 	cfgFileDefault = ".minit"
 
@@ -65,7 +66,7 @@ func Execute() {
 
 func init() {
 	//utils.InitLogger(LogFile, Logger, LogLevel)
-	utils.InitLoggerStdout(Logger, log.InfoLevel)
+	utils.InitLoggerStdout(Logger, LogLevel)
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.minit.yaml)")
@@ -104,8 +105,8 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			home, _ := os.UserHomeDir()
-			Logger.Errorf("config.toml is not exist %s. Auto create at %s", home, home)
-			viper.WriteConfigAs(home)
+			Logger.Infof("%s is not exist %s. Auto create at %s", cfgFileDefault, home, home)
+			viper.WriteConfigAs(filepath.Join(home, cfgFileDefault))
 		} else {
 			Logger.Error(err)
 		}
@@ -115,10 +116,10 @@ func initConfig() {
 }
 
 func rootRun(cmd *cobra.Command, args []string) {
-	var err error
 
 	global.logDir = viper.GetString("logDir")
 	global.entryDir = viper.GetString("entryDir")
+	global.preStartDir = viper.GetString("preStartDir")
 
 	// create logDir
 	if _, err := os.Stat(global.logDir); err != nil {
@@ -132,28 +133,22 @@ func rootRun(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	listDirEtcMinit, _ := utils.DirAllChild(global.entryDir)
-	global.etc_minit_cmds, err = GetCommandsFormFilesofDir(global.entryDir)
-	if err != nil {
-		Logger.Error(err)
-	} else {
-		Logger.Info("List file at: ", global.entryDir, ": ", listDirEtcMinit)
-	}
-
-	listDirEtcMinitPreStart, _ := utils.DirAllChild(global.preStartDir)
-	global.etx_minit_prestart_cmds, err = GetCommandsFormFilesofDir(global.preStartDir)
-	if err != nil {
-		Logger.Error(err)
-	} else {
-		Logger.Info("List file at: ", global.preStartDir, ": ", listDirEtcMinitPreStart)
-	}
+	Logger.Debug("Entry dir: ", global.entryDir)
+	Logger.Debug("Pre start dir: ", global.preStartDir)
+	global.etc_minit_cmds = GetOsCmdInDir(global.entryDir)
+	global.etc_minit_prestart_cmds = GetOsCmdInDir(global.preStartDir)
 
 	if os.Getpid() == 1 {
 		go Reap()
 	}
+
+	Logger.Debugf("number of minit command: %d, ", len(global.etc_minit_cmds))
+	Logger.Debugf("number of prestart command: %d, ", len(global.etc_minit_prestart_cmds))
+	//if len(global.etc_minit_prestart_cmds) > 0 {
 	global.wgPostPreStart.Add(1)
-	go PreStartCmdsRun(global.etx_minit_prestart_cmds, global.procs, &global.wgPostPreStart)
+	go PreStartCmdsRun(global.etc_minit_prestart_cmds, global.procs, &global.wgPostPreStart)
 	global.wgPostPreStart.Wait()
+	//}
 	RunCmds(global.etc_minit_cmds, global.procs)
 	Wait(global.procs)
 }
@@ -162,19 +157,19 @@ func GetCommandsFormFilesofDir(dirPath string) ([]*exec.Cmd, error) {
 	var cmd *exec.Cmd
 	var cmds []*exec.Cmd
 	// search file in entryDir
-	listEntryFile, err := utils.DirAllChild(global.entryDir)
+	listEntryFile, err := utils.DirAllChild(dirPath)
 	if err != nil {
-		Logger.Error(err)
-		err := utils.DirCreate(global.entryDir, 0664)
+		Logger.Info(err)
+		err := utils.DirCreate(dirPath, 0664)
 		if err != nil {
 			return cmds, err
 		} else {
-			Logger.Infof("Folder %s is created", global.entryDir)
+			Logger.Infof("Folder %s is created", dirPath)
 		}
 	}
 	if len(listEntryFile) <= 0 {
 		//Logger.Info(global.logDir, ": Entry_directory is empty.")
-		return cmds, fmt.Errorf("entry_directory is empty")
+		return cmds, fmt.Errorf("%s is empty", dirPath)
 	}
 
 	for _, fileName := range listEntryFile {
@@ -281,4 +276,16 @@ func Wait(procs *Procs) {
 			procs.Cleanup(sig, global.timeout2Kill)
 		}
 	}
+}
+
+func GetOsCmdInDir(dirname string) []*exec.Cmd {
+	var err error
+	listDirEtcMinit, _ := utils.DirAllChild(dirname)
+	cmds, err := GetCommandsFormFilesofDir(dirname)
+	if err != nil {
+		Logger.Info(err)
+	} else {
+		Logger.Info("List file at: ", dirname, ": ", listDirEtcMinit)
+	}
+	return cmds
 }
