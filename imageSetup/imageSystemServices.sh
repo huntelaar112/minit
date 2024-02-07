@@ -43,7 +43,7 @@ ln -s /etc/container_environment.sh /etc/profile.d/
 #!/bin/bash
 ## Often used tools.
 #$minimal_apt_get_install curl less vim-tiny psmisc gpg-agent dirmngr nano htop iputils-ping jq
-apt-get install -y curl less vim-tiny psmisc gpg-agent dirmngr nano htop iputils-ping jq
+apt-get install -y curl less vim-tiny psmisc gpg-agent dirmngr nano htop iputils-ping jq kmod 
 
 ln -s /usr/bin/vim.tiny /usr/bin/vim
 ## This tool runs a command as another user and sets $HOME.

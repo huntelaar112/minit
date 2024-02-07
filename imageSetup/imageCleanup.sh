@@ -10,7 +10,7 @@ buildDir="/build"
 apt-get clean
 #find ${buildDir} -not \( -name 'minit' -or -name 'buildconfig' -or -name 'cleanup.sh' \) -delete
 
-[[ "${testEnable}" == "test" ]] && {
+[[ "${testEnable}" == "release" ]] && {
     rm -rf ${buildDir}
 }
 

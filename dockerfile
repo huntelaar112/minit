@@ -32,4 +32,7 @@ ENV DEBIAN_FRONTEND="teletype" \
     LC_ALL="en_US.UTF-8"
 
 EXPOSE ${EXPOSE_PORT}
-CMD ["/bin/minit"]
+ENTRYPOINT ["/bin/minit"]
+
+################################################
+# app layer you want to build
