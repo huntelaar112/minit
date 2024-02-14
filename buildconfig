@@ -15,5 +15,8 @@ export DISABLE_SSH=${DISABLE_SSH:-0}
 export DISABLE_CRON=${DISABLE_CRON:-0}
 
 export etcServiceDir="/etc/minit"
-export buildDir="/build"
 export etcServicePreStartDir="/etc/minit_prestart"
+
+export buildDir="/build"
+export removeBuildDir="no"
+export buildDirServices="/build/minitBaseSetup/services"

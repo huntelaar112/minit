@@ -1,4 +1,4 @@
-ARG USER=root BUILDDIR="/build" ZABBIX_VERSION="6.4-ubuntu-latest" 
+ARG USER=root BUILDDIR="/build" ZABBIX_VERSION="6.4-ubuntu-latest"  MINIBASESETUP="/build/minitBaseSetup"
 ARG VERSION="6.4-ubuntu-latest"
 ARG nvidia_binary_version="525.105.17" 
 ARG nvidia_binary="NVIDIA-Linux-x86_64-${nvidia_binary_version}.run"
@@ -20,33 +20,32 @@ LABEL maintainer="khacman98@gmail.com"
 #CMD /bin/bash
 
 # change port depend on your app
-ARG USER BUILDDIR EXPOSE_PORT="10050 22" etcServicePreStartDir etcServiceDir nvidia_binary_version nvidia_binary
+ARG USER BUILDDIR MINIBASESETUP EXPOSE_PORT="10050 22" etcServicePreStartDir etcServiceDir nvidia_binary_version nvidia_binary
 USER root
 ENV TZ=Asia/Ho_Chi_Minh
 
 COPY --from=build ${BUILDDIR} ${BUILDDIR}
-COPY --from=build /zabbix-healchecknginx/healcheck_nginx ${BUILDDIR}/build-zabbix/script_conf
+COPY --from=build /zabbix-healchecknginx/healcheck_nginx ${BUILDDIR}/build-zabbix/script_conf/healcheck_nginx
 
 # install nvidia before driver if nvidia_binary_version is specific version
-#RUN if [[ ! -z "$nvidia_binary_version" ]] ; wget -q https://us.download.nvidia.com/XFree86/Linux-x86_64/${nvidia_binary_version}/${nvidia_binary} && chmod +x ${nvidia_binary} && \
-#  ./${nvidia_binary} --accept-license --ui=none --no-kernel-module --no-questions && \
-#  rm -rf ${nvidia_binary}; fi
+RUN if [[ ! -z "$nvidia_binary_version" ]] ; wget -q https://us.download.nvidia.com/XFree86/Linux-x86_64/${nvidia_binary_version}/${nvidia_binary} && chmod +x ${nvidia_binary} && \
+  ./${nvidia_binary} --accept-license --ui=none --no-kernel-module --no-questions && \
+  rm -rf ${nvidia_binary}; fi
 
+RUN echo "Nvidia version: $nvidia_binary_version"
 RUN apt-get dist-upgrade -y --no-install-recommends -o Dpkg::Options::="--force-confold"
-RUN chmod +x ${BUILDDIR}/buildconfig && cp ${BUILDDIR}/buildconfig /bin
-RUN ${BUILDDIR}/imageSetup/imagePrepare.sh && \
-	${BUILDDIR}/imageSetup/imageSystemServices.sh && \
-    cp ${BUILDDIR}/minit /bin 
+RUN chmod +x ${BUILDDIR}/buildconfig && cp ${BUILDDIR}/buildconfig /bin && cp ${BUILDDIR}/minit /bin && \
+    ${MINIBASESETUP}/imagePrepare.sh && ${BUILDDIR}/build-zabbix/zabbix-agent-init.sh
 
-RUN cp ${BUILDDIR}/build-zabbix/script_conf/zabbix-agent-init.sh ${etcServicePreStartDir} && cp ${BUILDDIR}/build-zabbix/script_conf/zabbix-agent.minit /etc/minit && cp ${BUILDDIR}/build-zabbix/script_conf/docker-entrypoint-zabbixoriginal.sh ${etcServicePreStartDir}
+RUN cp ${BUILDDIR}/build-zabbix/50_zabbix-agent-init.sh ${etcServicePreStartDir} && \
+    cp ${BUILDDIR}/build-zabbix/50_zabbix-agent.minit ${etcServiceDir} && \
 
-#RUN echo "Nvidia version: $nvidia_binary_version"
 #RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 #RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 #  --mount=type=cache,target=/var/lib/apt,sharing=locked \
 #  apt update && apt install -y curl nano kmod iputils-ping wget
 
-RUN ${BUILDDIR}/imageSetup/imageCleanup.sh 
+RUN ${BUILDDIR}/minitBaseSetup/imageCleanup.sh 
 #RUN ${BUILDDIR}/imageSetup/imageCleanup.sh release
 
 ENV DEBIAN_FRONTEND="teletype" \

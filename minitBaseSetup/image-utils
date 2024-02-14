@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#AUTHORIZED_KEYS=/root/.ssh/authorized_keys
+sshGetPrivateKey() {
+    KEY_NAME="ssh_host_ed25519_key"
+
+    [[ -e /etc/ssh/${KEY_NAME} ]] && {
+        cat /etc/ssh/${KEY_NAME}
+    } || {
+        echo "/etc/ssh/${KEY_NAME} is not exist"
+    }
+}
+
+apt-clean-get() {
+    ARGS=$@
+    echo "Installing $ARGS"
+
+    apt-get -q update && apt-get -qy install --no-install-recommends $ARGS &&
+        apt-get -qy autoremove &&
+        apt-get clean &&
+        rm -r /var/lib/apt/lists/*
+}

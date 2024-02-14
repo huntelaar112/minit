@@ -3,12 +3,11 @@ set -e
 source $(which buildconfig)
 set -x
 
-
 $minimal_apt_get_install cron
 
 #mkdir ${etcServiceDir}/cron
 chmod 600 /etc/crontab
-cp ${buildDir}/services/cron/cron.minit ${etcServiceDir}
+cp ${buildDirServices}/cron/cron.minit ${etcServiceDir}
 
 # Fix cron issues in 0.9.19, see also #345: https://github.com/phusion/baseimage-docker/issues/345
 sed -i 's/^\s*session\s\+required\s\+pam_loginuid.so/# &/' /etc/pam.d/cron
