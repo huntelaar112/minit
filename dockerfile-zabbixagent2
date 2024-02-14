@@ -28,17 +28,17 @@ COPY --from=build ${BUILDDIR} ${BUILDDIR}
 COPY --from=build /zabbix-healchecknginx/healcheck_nginx ${BUILDDIR}/build-zabbix/script_conf/healcheck_nginx
 
 # install nvidia before driver if nvidia_binary_version is specific version
-RUN if [[ ! -z "$nvidia_binary_version" ]] ; wget -q https://us.download.nvidia.com/XFree86/Linux-x86_64/${nvidia_binary_version}/${nvidia_binary} && chmod +x ${nvidia_binary} && \
-  ./${nvidia_binary} --accept-license --ui=none --no-kernel-module --no-questions && \
-  rm -rf ${nvidia_binary}; fi
+#RUN  wget -q https://us.download.nvidia.com/XFree86/Linux-x86_64/${nvidia_binary_version}/${nvidia_binary} && chmod +x ${nvidia_binary} && \
+#  ./${nvidia_binary} --accept-license --ui=none --no-kernel-module --no-questions && \
+#  rm -rf ${nvidia_binary} 
 
 RUN echo "Nvidia version: $nvidia_binary_version"
 RUN apt-get dist-upgrade -y --no-install-recommends -o Dpkg::Options::="--force-confold"
 RUN chmod +x ${BUILDDIR}/buildconfig && cp ${BUILDDIR}/buildconfig /bin && cp ${BUILDDIR}/minit /bin && \
-    ${MINIBASESETUP}/imagePrepare.sh && ${BUILDDIR}/build-zabbix/zabbix-agent-init.sh
+    ${MINIBASESETUP}/imagePrepare.sh 
 
 RUN cp ${BUILDDIR}/build-zabbix/50_zabbix-agent-init.sh ${etcServicePreStartDir} && \
-    cp ${BUILDDIR}/build-zabbix/50_zabbix-agent.minit ${etcServiceDir} && \
+    cp ${BUILDDIR}/build-zabbix/50_zabbix-agent.minit ${etcServiceDir} 
 
 #RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 #RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
