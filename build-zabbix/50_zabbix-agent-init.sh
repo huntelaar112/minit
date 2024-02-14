@@ -6,6 +6,7 @@ set -x
 
 cp "${buildDir}"/build-zabbix/script_conf/docker-entrypoint-zabbixoriginal.sh /bin && chmod +x /bin/docker-entrypoint-zabbixoriginal.sh
 
+
 ## if mountPoint is empty, cp config
 mountPoint="/mnt/containerdata/zabbix-agent/etc_zabbix"
 [[ -z $(ls -A $mountPoint) ]] && {
