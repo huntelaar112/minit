@@ -18,6 +18,7 @@ mountPoint="/mnt/containerdata/zabbix-agent/etc_zabbix"
     cp "${buildDir}"/build-zabbix/script_conf/nginx_requetsPerMin.conf /etc/zabbix/zabbix_agentd.d
 
     # script discovery
+    mkdir -p /etc/zabbix/scripts
     cp "${buildDir}"/build-zabbix/script_conf/get_gpus_info.sh /etc/zabbix/scripts
     cp "${buildDir}"/build-zabbix/script_conf/healcheck_nginx /etc/zabbix/scripts
 }
