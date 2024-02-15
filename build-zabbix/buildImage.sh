@@ -1,11 +1,21 @@
 #!/bin/bash
 
-type=${1}
-[[ ${type} == "-h" ]] && {
-    echo "Use: ./buildImage [nivida-version]
-example: nvidia525.105.17 or ./buildImage to build without nvidia driver."
+nvidiaVersion=${1}
+[[ ${nvidiaVersion} == "-h" ]] && {
+    echo "Use: ./buildImage [nvidiaVersion]
+example: 525.105.17 or ./buildImage to build without nvidia driver."
     exit 0
 }
 
-docker build -t mannk98/zabbix-agent2:6.4ubuntu --build-arg nvidia_binary_version="${type}" -f ./../dockerfile-zabbixagent2 ..
+[[ -n ${nvidiaVersion} ]] && {
+    nvidiaVersionTag="-nvidia${1}"
+} || {
+    nvidiaVersionTag=""
+}
+
+#470.182.03 prod
+#525.105.17
+#535.154.05 ssd
+
+docker build -t mannk98/zabbix-agent2:6.4ubuntu"${nvidiaVersionTag}" --build-arg nvidia_version="${nvidiaVersion}" -f ./../dockerfile-zabbixagent2 ..
 echo "done build"

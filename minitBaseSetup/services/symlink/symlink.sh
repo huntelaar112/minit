@@ -4,4 +4,4 @@ set -e
 set -x
 source $(which buildconfig)
 
-cp ${buildDirServices}/symlink/10_symlink.minit ${etcServicePreStartDir}
+cp ${buildDirServices}/symlink/10_global_symlink.minit ${etcServicePreStartDir}

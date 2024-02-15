@@ -82,7 +82,8 @@ ln -s /etc/container_environment.sh /etc/profile.d/
 ## Install cron daemon.
 [ "$DISABLE_CRON" -eq 0 ] && "${buildDir}"/minitBaseSetup/services/cron/cron.sh || true
 
-"${buildDir}"/minitBaseSetup/services/symlink/symlink.sh || true
+chmod +x "${buildDir}"/minitBaseSetup/services/symlink/symlink.sh
+"${buildDir}"/minitBaseSetup/services/symlink/symlink.sh #|| true
 
 ## after this script
 # /etc/minit

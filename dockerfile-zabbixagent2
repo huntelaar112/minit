@@ -1,8 +1,9 @@
-ARG USER=root BUILDDIR="/build" ZABBIX_VERSION="6.4-ubuntu-latest"  MINIBASESETUP="/build/minitBaseSetup"
-ARG VERSION="6.4-ubuntu-latest"
-ARG nvidia_binary_version="525.105.17" 
-ARG nvidia_binary="NVIDIA-Linux-x86_64-${nvidia_binary_version}.run"
-ARG etcServicePreStartDir="/etc/minit_prestart" etcServiceDir="/etc/minit"
+ARG USER=root BUILDDIR="/build" MINIBASESETUP="/build/minitBaseSetup" etcServicePreStartDir="/etc/minit_prestart" etcServiceDir="/etc/minit"
+ARG ZABBIX_VERSION="6.4-ubuntu-latest"
+
+ARG nvidia_version="535.154.05"
+ARG nvidia_binary="NVIDIA-Linux-x86_64-${nvidia_version}.run"
+
 
 FROM golang:1.21.6-bookworm as build
 ARG USER BUILDDIR
@@ -18,24 +19,23 @@ RUN cd / && git clone https://github.com/huntelaar112/zabbix-healchecknginx.git 
 FROM zabbix/zabbix-agent2:${ZABBIX_VERSION}
 LABEL maintainer="khacman98@gmail.com"
 #CMD /bin/bash
-
 # change port depend on your app
-ARG USER BUILDDIR MINIBASESETUP EXPOSE_PORT="10050 22" etcServicePreStartDir etcServiceDir nvidia_binary_version nvidia_binary
+ARG USER BUILDDIR MINIBASESETUP EXPOSE_PORT="10050 22" etcServicePreStartDir etcServiceDir nvidia_binary nvidia_version
+
 USER root
-ENV TZ=Asia/Ho_Chi_Minh
+ENV TZ=Asia/Ho_Chi_Minh 
 
 COPY --from=build ${BUILDDIR} ${BUILDDIR}
 COPY --from=build /zabbix-healchecknginx/healcheck_nginx ${BUILDDIR}/build-zabbix/script_conf/healcheck_nginx
 
-# install nvidia before driver if nvidia_binary_version is specific version
-#RUN  wget -q https://us.download.nvidia.com/XFree86/Linux-x86_64/${nvidia_binary_version}/${nvidia_binary} && chmod +x ${nvidia_binary} && \
-#  ./${nvidia_binary} --accept-license --ui=none --no-kernel-module --no-questions && \
-#  rm -rf ${nvidia_binary} 
-
-RUN echo "Nvidia version: $nvidia_binary_version"
 RUN apt-get dist-upgrade -y --no-install-recommends -o Dpkg::Options::="--force-confold"
-RUN chmod +x ${BUILDDIR}/buildconfig && cp ${BUILDDIR}/buildconfig /bin && cp ${BUILDDIR}/minit /bin && \
-    ${MINIBASESETUP}/imagePrepare.sh 
+RUN chmod +x ${BUILDDIR}/buildconfig ${BUILDDIR}/build-zabbix/installNvidia.sh && cp ${BUILDDIR}/buildconfig /bin && cp ${BUILDDIR}/minit /bin && \
+    ${MINIBASESETUP}/imagePrepare.sh && ${BUILDDIR}/build-zabbix/installNvidia.sh ${nvidia_version}
+
+# install nvidia before driver if nvidia_version is specific version
+#RUN  if [[ ! -z "${nvidia_version}" ]]; then wget https://us.download.nvidia.com/XFree86/Linux-x86_64/${nvidia_version}/${nvidia_binary} && chmod +x ${nvidia_binary} && \
+#    ./${nvidia_binary} --accept-license --ui=none --no-kernel-module --no-questions && \
+#    rm -rf ${nvidia_binary}; fi
 
 RUN cp ${BUILDDIR}/build-zabbix/50_zabbix-agent-init.sh ${etcServicePreStartDir} && \
     cp ${BUILDDIR}/build-zabbix/50_zabbix-agent.minit ${etcServiceDir} 
