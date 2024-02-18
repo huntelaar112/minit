@@ -1,0 +1,29 @@
+ARG USER=root BUILDDIR="/build" MINIBASESETUP="/build/minitBaseSetup"
+
+FROM ubuntu:20.04 
+LABEL maintainer="khacman98@gmail.com"
+
+ARG USER BUILDDIR MINIBASESETUP EXPOSE_PORT="8080 8250 9090" dbpassword dbIP
+ENV TZ=Asia/Ho_Chi_Minh
+ENV DEBIAN_FRONTEND="teletype" \
+    LANG="en_US.UTF-8" \
+    LANGUAGE="en_US:en" \
+    LC_ALL="en_US.UTF-8"
+
+ENV dbpassword=password@123 dbIP=172.172.0.230
+
+RUN apt update -y && apt install -y curl less psmisc gpg-agent dirmngr nano htop iputils-ping jq kmod wget
+
+RUN apt install -y software-properties-common && apt-add-repository universe && \
+    apt install -y python3-mysql.connector python-setuptools dh-systemd devscripts python3-pip sudo && \
+    pip3 install mysql-connector-python && \
+    apt install -y debhelper openjdk-11-jdk libws-commons-util-java genisoimage libcommons-codec-java libcommons-httpclient-java liblog4j1.2-java maven 
+    
+RUN curl -sL https://deb.nodesource.com/setup_18.x | sudo -E bash - &&  apt-get install -y nodejs
+
+RUN echo "deb https://download.cloudstack.org/ubuntu focal 4.19" >/etc/apt/sources.list.d/cloudstack.list && \
+    wget -O - https://download.cloudstack.org/release.asc | sudo tee /etc/apt/trusted.gpg.d/cloudstack.asc && sudo apt update -y && \
+    apt install -y cloudstack-management
+
+EXPOSE ${EXPOSE_PORT}
+ENTRYPOINT ["cloudstack-setup-databases cloud:${dbpassword}@${dbIP} --deploy-as=root:${dbpassword} && cloudstack-setup-management"]

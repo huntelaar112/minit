@@ -1,0 +1,11 @@
+#!/bin/bash
+
+[[ ${1} == "no-cache" ]] && {
+	docker build --no-cache -t cloudstack:server -f ./dockerfile .
+	echo "Build image no-cache done"
+} || {
+	docker build -t cloudstack:server -f ./dockerfile .
+	echo "Build image (with cache) done"
+}
+
+docker build -t cloudstack:mysql-server -f ./buildMysql .
