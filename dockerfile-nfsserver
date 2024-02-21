@@ -1,0 +1,47 @@
+ARG USER=root BUILDDIR="/build" MINIBASESETUP="/build/minitBaseSetup"
+
+FROM golang:1.21.6-bookworm as build
+ARG USER BUILDDIR
+CMD /bin/bash
+COPY . ${BUILDDIR}
+#WORKDIR /build-minit 
+
+RUN cd ${BUILDDIR} && go build -o minit
+
+
+################################################
+FROM debian:12.5
+LABEL maintainer "khacman98@gmail.com"
+LABEL source "https://github.com/huntelaar112/minit.git"
+LABEL branch "main"
+
+ARG USER BUILDDIR MINIBASESETUP EXPOSE_PORT="2049 22"
+ENV TZ=Asia/Ho_Chi_Minh
+
+COPY --from=build ${BUILDDIR} ${BUILDDIR} 
+
+RUN apt-get dist-upgrade -y --no-install-recommends -o Dpkg::Options::="--force-confold"
+
+RUN chmod +x ${BUILDDIR}/buildconfig && cp ${BUILDDIR}/buildconfig /bin && cp ${BUILDDIR}/minit /bin && \
+    ${MINIBASESETUP}/imagePrepare.sh 
+
+ENV DEBIAN_FRONTEND="teletype" \
+    LANG="en_US.UTF-8" \
+    LANGUAGE="en_US:en" \
+    LC_ALL="en_US.UTF-8"
+
+RUN apt-get update -y && apt-get install -y nfs-utils iproute2 nano  && rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/* && \
+    mkdir -p /var/lib/nfs/rpc_pipefs /var/lib/nfs/v4recovery && \
+    echo "rpc_pipefs    /var/lib/nfs/rpc_pipefs rpc_pipefs      defaults        0       0" >> /etc/fstab && \
+    echo "nfsd  /proc/fs/nfsd   nfsd    defaults        0       0" >> /etc/fstab
+
+RUN chmod +x /usr/bin/nfsd.sh && cp /build/exports /etc && cat /build/bashrc >/root/.bashrc & cp nfsd.sh /etc/minit/nfsd.sh
+
+RUN ${MINIBASESETUP}/imageCleanup.sh 
+
+EXPOSE ${EXPOSE_PORT}
+ENTRYPOINT ["/bin/minit"]
+
+
+
+
