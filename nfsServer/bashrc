@@ -1,3 +1,4 @@
+#!/bin/bash
 alias ll="ls -ltan"
 
 alias hosts='cat /etc/hosts'

@@ -1,16 +1,5 @@
 #!/bin/bash
 
-# Copyright 2020 The OpenEBS Authors.
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#     http://www.apache.org/licenses/LICENSE-2.0
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 # Make sure we react to these signals by running stop() when we see them - for clean shutdown
 # And then exiting
 trap "stop; exit 0;" SIGTERM SIGINT
@@ -29,21 +18,6 @@ stop()
   kill -TERM $pid1 $pid2 $pid3 > /dev/null 2>&1
   echo "Terminated."
   exit
-}
-
-get_nfs_args() {
-  declare -n args=$1
-
-  args=(--debug 8 --no-udp --no-nfs-version 2 --no-nfs-version 3)
-
-  # here we are checking if variable exist and its value is not null
-  if [ ! -z ${NFS_GRACE_TIME:+x} ]; then
-    args+=( --grace-time ${NFS_GRACE_TIME})
-  fi
-
-  if [ ! -z ${NFS_LEASE_TIME:+x} ]; then
-    args+=( --lease-time ${NFS_LEASE_TIME})
-  fi
 }
 
 # Check if the SHARED_DIRECTORY variable is empty
@@ -100,115 +74,11 @@ else
   /bin/sed -i "s/{{SYNC}}/sync/g" /etc/exports
 fi
 
-# Check if the CUSTOM_EXPORTS_CONFIG variable is set, and if it is, clear the
-# /etc/exports file that's already present and replace it with the contents
-# of the CUSTOM_EXPORTS_CONFIG variable
-
-# START OF JAMES CODE
-if [ ! -z "${CUSTOM_EXPORTS_CONFIG}" ]; then
-  echo "CUSTOM_EXPORTS_CONFIG variable is set, clearing /etc/exports..."
-  if [ -f "etc/exports" ]; then  
-    /bin/rm etc/exports
-  fi
-  echo "Adding the contents of \$CUSTOM_EXPORTS_CONFIG to /etc/exports..."
-  echo $CUSTOM_EXPORTS_CONFIG > /etc/exports
-  echo "Addition complete." 
-fi
-# END OF JAMES CODE
-
 # Partially set 'unofficial Bash Strict Mode' as described here: http://redsymbol.net/articles/unofficial-bash-strict-mode/
 # We don't set -e because the pidof command returns an exit code of 1 when the specified process is not found
 # We expect this at times and don't want the script to be terminated when it occurs
 set -uo pipefail
 IFS=$'\n\t'
-
-# Modify the shared directory (${SHARED_DIRECTORY}) file user owner
-# Does not support more than one shared directory
-if [ -n "${FILEPERMISSIONS_UID}" ]; then
-  # These variables will be used to handle errors
-  UID_ERROR=""
-  CHOWN_UID_ERROR=""
-  # Validating input UID value
-  # Errors if UID is not a decimal number
-  targetUID=$(printf %d ${FILEPERMISSIONS_UID}) || UID_ERROR=$?
-  if [ -n "${UID_ERROR}" ]; then
-    echo "user change error: Invalid UID ${FILEPERMISSIONS_UID}"
-    exit 1
-  fi
-
-  presentUID=$(stat ${SHARED_DIRECTORY} --printf=%u)
-
-  # OnRootMismatch-like check
-  if [ "$presentUID" -ne "$targetUID" ]; then
-    chown -R $targetUID ${SHARED_DIRECTORY} || CHOWN_UID_ERROR=$?
-    if [ -n "${CHOWN_UID_ERROR}" ]; then
-      echo "user change error: Failed to change user owner of ${SHARED_DIRECTORY}"
-      exit 1
-    fi
-
-    echo "chown user command succeeded"
-  fi
-fi
-
-# Modify the shared directory (${SHARED_DIRECTORY}) file group owner
-# Does not support more than one shared directory
-if [ -n "${FILEPERMISSIONS_GID}" ]; then
-  # These variables will be used to handle errors
-  GID_ERROR=""
-  CHOWN_GID_ERROR=""
-  # Validating input GID value
-  # Errors if GID is not a decimal number
-  targetGID=$(printf %d ${FILEPERMISSIONS_GID}) || GID_ERROR=$?
-  if [ -n "${GID_ERROR}" ]; then
-    echo "group change error: Invalid GID ${FILEPERMISSIONS_GID}"
-    exit 1
-  fi
-
-  presentGID=$(stat ${SHARED_DIRECTORY} --printf=%g)
-
-  # OnRootMismatch-like check
-  if [ "$presentGID" -ne "$targetGID" ]; then
-    chown -R :${targetGID} ${SHARED_DIRECTORY} || CHOWN_GID_ERROR=$?
-    if [ -n "${CHOWN_GID_ERROR}" ]; then
-      echo "group change error: Failed to change group owner of ${SHARED_DIRECTORY}"
-      exit 1
-    fi
-
-    echo "chown group command succeeded"
-  fi
-fi
-
-# Modify the shared directory (${SHARED_DIRECTORY}) file permissions
-# Does not support more than one shared directory
-if [ -n "${FILEPERMISSIONS_MODE}" ]; then
-  # These variables will be used to handle errors
-  TEST_CHMOD_ERROR=""
-  CHMOD_ERROR=""
-  
-  # 'chmod -c' output is a non-empty string if the file mode changes
-  # The TEST_CHMOD_OUT variable is used to capture this string
-  TEST_CHMOD_OUT=$(chmod ${FILEPERMISSIONS_MODE} ${SHARED_DIRECTORY} -c) || TEST_CHMOD_ERROR=$?
-  # If the command fails, the specified mode is invalid
-  if [ -n "${TEST_CHMOD_ERROR}" ]; then
-    echo "mode change error: chmod test command failed. 'mode' value ${FILEPERMISSIONS_MODE} might be invalid"
-    exit 1
-  fi
-
-  # If the TEST_CHMOD_OUT is not empty, then there is a root mismatch
-  # (Similar to OnRootMismatch)
-  # Thus a recursive chmod is issued if there is root mismatch
-  # NOTE: This test won't work if we want to handle root mismatch in
-  #       any other way than the execution of the recursive chmod
-  if [ -n "${TEST_CHMOD_OUT}" ]; then
-    chmod -R ${FILEPERMISSIONS_MODE} ${SHARED_DIRECTORY} || CHMOD_ERROR=$?
-    if [ -n "${CHMOD_ERROR}" ]; then
-      echo "mode change error: Failed to change file mode of ${SHARED_DIRECTORY}"
-      exit 1
-    fi
-
-    echo "chmod command succeeded"
-  fi
-fi
 
 # This loop runs till until we've started up successfully
 while true; do
@@ -235,8 +105,7 @@ while true; do
     # /usr/sbin/rpc.statd
 
     echo "Starting NFS in the background..."
-    get_nfs_args nfs_args
-    /usr/sbin/rpc.nfsd ${nfs_args[@]}
+    /usr/sbin/rpc.nfsd --debug 8 --no-udp --no-nfs-version 3
     echo "Exporting File System..."
     if /usr/sbin/exportfs -rv; then
       /usr/sbin/exportfs
@@ -245,7 +114,7 @@ while true; do
       exit 1
     fi
     echo "Starting Mountd in the background..."These
-    /usr/sbin/rpc.mountd --debug all --no-udp --no-nfs-version 2 --no-nfs-version 3
+    /usr/sbin/rpc.mountd --debug all --no-udp --no-nfs-version 3
 # --exports-file /etc/exports
 
     # Check if NFS is now running by recording it's PID (if it's not running $pid will be null):
