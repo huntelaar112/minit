@@ -69,7 +69,7 @@ func init() {
 	utils.InitLoggerStdout(Logger, LogLevel)
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.minit.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.minit)")
 
 	viper.SetDefault("logDir", "/var/log/minit")
 	viper.SetDefault("entryDir", "/etc/minit")
@@ -121,7 +121,7 @@ func rootRun(cmd *cobra.Command, args []string) {
 	global.entryDir = viper.GetString("entryDir")
 	global.preStartDir = viper.GetString("preStartDir")
 
-	// create logDir
+	// create logDir (not use yet, log flush directly to stdout)
 	if _, err := os.Stat(global.logDir); err != nil {
 		if os.IsNotExist(err) {
 			err := utils.DirCreate(global.logDir, 0755)
