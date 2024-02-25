@@ -1,0 +1,12 @@
+#!/bin/bash
+erunningdir=/etc/minit
+
+IFS=$'\n' read -d '' -a listshenv <<<"$(find "${erunningdir}/" -follow -mindepth 1 -maxdepth 1 -type f -name '*.shenv' -print | sort -V)" || :
+# IFS=$'\n' listshenv=($(find "${erunningdir}/" -follow -mindepth 1 -maxdepth 1 -type f -name '*.shenv' -print | sort -V))
+for shenv in "${listshenv[@]}"; do
+    # for shenv in ${listshenv}; do
+    set -a
+    . "${shenv}"
+    set +a
+done
+unset shenv listshenv erunningdir

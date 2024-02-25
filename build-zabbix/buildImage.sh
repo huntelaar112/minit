@@ -17,5 +17,5 @@ example: 525.105.17 or ./buildImage to build without nvidia driver."
 #525.105.17
 #535.154.05 ssd
 
-docker build -t mannk98/zabbix-agent2:6.4ubuntu"${nvidiaVersionTag}" --build-arg nvidia_version="${nvidiaVersion}" -f ./../dockerfile-zabbixagent2 ..
+docker build -t mannk98/zabbix-agent2:6.4ubuntu"${nvidiaVersionTag}" --build-arg nvidia_version="${nvidiaVersion}" -f dockerfile-zabbixagent2 ..
 echo "done build"

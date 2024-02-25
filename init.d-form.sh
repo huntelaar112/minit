@@ -41,5 +41,5 @@ exit 0
 
 # srvctl, sysctl
 # 50-01-symlinks-env.shenv load all .shenv in /$USERNAME/workspace/.config/
-# 50-00-env.shenv --> export TZ, publicuser, root name env and its home, load JAVA ENV if java exist .shenv in ${USERHOME}/workspace/.config/s
+# 50-00-env.shenv --> export TZ, publicuser, root name env and its home, load JAVA ENV if java exist .shenv in ${USERHOME}/workspace/.config/
 # 60-00-nginxgen.shenv get nginxshell env, use inside script start.

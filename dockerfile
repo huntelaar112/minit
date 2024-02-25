@@ -9,25 +9,26 @@ COPY . ${BUILDDIR}
 RUN cd ${BUILDDIR} && go build -o minit
 
 
-################################################
+########################################################################
 FROM debian:12.4
 LABEL maintainer="khacman98@gmail.com"
 
 ARG USER BUILDDIR MINIBASESETUP EXPOSE_PORT="80 443 22"
-ENV TZ=Asia/Ho_Chi_Minh
-
-COPY --from=build ${BUILDDIR} ${BUILDDIR} 
-
-RUN apt-get dist-upgrade -y --no-install-recommends -o Dpkg::Options::="--force-confold"
-
-RUN chmod +x ${BUILDDIR}/buildconfig && cp ${BUILDDIR}/buildconfig /bin && cp ${BUILDDIR}/minit /bin && \
-    ${MINIBASESETUP}/imagePrepare.sh && \
-	${MINIBASESETUP}/imageCleanup.sh 
-
-ENV DEBIAN_FRONTEND="teletype" \
+ENV TZ=Asia/Ho_Chi_Minh \
+    DEBIAN_FRONTEND="teletype" \
     LANG="en_US.UTF-8" \
     LANGUAGE="en_US:en" \
     LC_ALL="en_US.UTF-8"
+
+COPY --from=build ${BUILDDIR} ${BUILDDIR} 
+#RUN apt-get dist-upgrade -y --no-install-recommends -o Dpkg::Options::="--force-confold"
+
+RUN chmod +x ${BUILDDIR}/buildconfig && cp ${BUILDDIR}/buildconfig /bin && cp ${BUILDDIR}/minit /bin && \
+    ${MINIBASESETUP}/imagePrepare.sh
+
+## put your set up here
+
+RUN	${MINIBASESETUP}/imageCleanup.sh 
 
 EXPOSE ${EXPOSE_PORT}
 ENTRYPOINT ["/bin/minit"]

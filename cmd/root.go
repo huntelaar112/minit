@@ -153,33 +153,6 @@ func rootRun(cmd *cobra.Command, args []string) {
 	Wait(global.procs)
 }
 
-func GetCommandsFormFilesofDir(dirPath string) ([]*exec.Cmd, error) {
-	var cmd *exec.Cmd
-	var cmds []*exec.Cmd
-	// search file in entryDir
-	listEntryFile, err := utils.DirAllChild(dirPath)
-	if err != nil {
-		Logger.Info(err)
-		err := utils.DirCreate(dirPath, 0664)
-		if err != nil {
-			return cmds, err
-		} else {
-			Logger.Infof("Folder %s is created", dirPath)
-		}
-	}
-	if len(listEntryFile) <= 0 {
-		//Logger.Info(global.logDir, ": Entry_directory is empty.")
-		return cmds, fmt.Errorf("%s is empty", dirPath)
-	}
-
-	for _, fileName := range listEntryFile {
-		os.Chmod(fileName, 0775)
-		cmd = exec.Command("bash", "-c", fileName)
-		cmds = append(cmds, cmd)
-	}
-	return cmds, err
-}
-
 // run all cmd, if one end or error die --> print log
 func RunCmds(cmds []*exec.Cmd, procs *Procs) {
 	for i := range cmds {
@@ -286,11 +259,38 @@ func Wait(procs *Procs) {
 func GetOsCmdInDir(dirname string) []*exec.Cmd {
 	var err error
 	listDirEtcMinit, _ := utils.DirAllChild(dirname)
-	cmds, err := GetCommandsFormFilesofDir(dirname)
+	cmds, err := BashSourceAllFileInDir2ExecCmd(dirname)
 	if err != nil {
 		Logger.Info(err)
 	} else {
 		Logger.Info("List file at: ", dirname, ": ", listDirEtcMinit)
 	}
 	return cmds
+}
+
+func BashSourceAllFileInDir2ExecCmd(dirPath string) ([]*exec.Cmd, error) {
+	var cmd *exec.Cmd
+	var cmds []*exec.Cmd
+	// search file in entryDir
+	listEntryFile, err := utils.DirAllChild(dirPath)
+	if err != nil {
+		Logger.Info(err)
+		err := utils.DirCreate(dirPath, 0664)
+		if err != nil {
+			return cmds, err
+		} else {
+			Logger.Infof("Folder %s is created", dirPath)
+		}
+	}
+	if len(listEntryFile) <= 0 {
+		//Logger.Info(global.logDir, ": Entry_directory is empty.")
+		return cmds, fmt.Errorf("%s is empty", dirPath)
+	}
+
+	for _, fileName := range listEntryFile {
+		os.Chmod(fileName, 0775)
+		cmd = exec.Command("bash", "-c", fileName)
+		cmds = append(cmds, cmd)
+	}
+	return cmds, err
 }

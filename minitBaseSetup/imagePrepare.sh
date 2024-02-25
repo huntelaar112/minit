@@ -82,13 +82,6 @@ ln -s /etc/container_environment.sh /etc/profile.d/
 ## Install cron daemon.
 [ "$DISABLE_CRON" -eq 0 ] && "${buildDir}"/minitBaseSetup/services/cron/cron.sh || true
 
-chmod +x "${buildDir}"/minitBaseSetup/services/symlink/symlink.sh
-"${buildDir}"/minitBaseSetup/services/symlink/symlink.sh #|| true
-
-## after this script
-# /etc/minit
-# /etc/prodfile.d (env file)
-# install syslog, ssh server, cron
 # install runit
 
 ## Often used tools.
@@ -100,3 +93,4 @@ ln -s /usr/bin/vim.tiny /usr/bin/vim
 ## This tool allows installation of apt packages with automatic cache cleanup.
 chmod +x "${buildDir}"/minitBaseSetup/image-utils
 cp "${buildDir}"/minitBaseSetup/image-utils /bin && echo "source $(which image-utils)" >> ~/.bashrc 
+cat "${buildDir}"/minitBaseSetup/bashrc-utils >> ~/.bashrc 

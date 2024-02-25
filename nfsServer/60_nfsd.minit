@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#cp /build/nfsServer/exports /etc/ && cat /build/nfsServer/bashrc >>/root/.bashrc 
+
 stop() {
   # We're here because we've seen SIGTERM, likely via a Docker stop command or similar
   # Let's shutdown cleanly

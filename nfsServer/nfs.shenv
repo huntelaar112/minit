@@ -1,0 +1,5 @@
+#nfs
+: ${SHARED_DIRECTORY:=/nfsshare}
+: ${READ_ONLY:=rw}
+: ${SYNC:=true}
+: ${PERMITTED:=}

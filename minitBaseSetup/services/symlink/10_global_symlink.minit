@@ -1,6 +1,0 @@
-#!/bin/bash
-set -e
-source $(which buildconfig)
-
-#mkdir -p /mnt/containerdata/zabbix-agent/etc_zabbix
-#ln -s /etc/zabbix /mnt/containerdata/zabbix-agent/etc_zabbix
