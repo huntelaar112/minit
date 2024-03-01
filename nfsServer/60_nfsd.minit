@@ -11,6 +11,7 @@ stop() {
 
   pid1=$(pidof rpc.nfsd)
   pid2=$(pidof rpc.mountd)
+  pid4=$(pidof rpc.statd)
   # For IPv6 bug:
   pid3=$(pidof rpcbind)
   kill -TERM $pid1 $pid2 $pid3 >/dev/null 2>&1
@@ -104,10 +105,10 @@ while true; do
     echo "Displaying rpcbind status..."
     /sbin/rpcinfo
 
-    # Only required if v3 will be used
-    # /usr/sbin/rpc.idmapd
-    # /usr/sbin/rpc.gssd -v
-    # /usr/sbin/rpc.statd
+    Only required if v3 will be used
+    /usr/sbin/rpc.idmapd
+    /usr/sbin/rpc.gssd -v
+    /usr/sbin/rpc.statd
 
     echo "Starting NFS in the background..."
     /usr/sbin/rpc.nfsd --debug 8 --no-udp --no-nfs-version 3
