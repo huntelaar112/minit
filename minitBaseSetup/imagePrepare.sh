@@ -85,7 +85,7 @@ ln -s /etc/container_environment.sh /etc/profile.d/
 # install runit
 
 ## Often used tools.
-apt-get install -y curl less vim-tiny psmisc gpg-agent dirmngr nano htop iputils-ping jq kmod wget resolvconf
+apt-get install -y curl less vim-tiny psmisc gpg-agent dirmngr nano htop iputils-ping jq kmod wget #resolvconf
 ln -s /usr/bin/vim.tiny /usr/bin/vim
 
 ## This tool runs a command as another user and sets $HOME.
