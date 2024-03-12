@@ -1,0 +1,17 @@
+#!/bin/bash
+
+[ -e /etc/machine-id ] || {
+    dbus-uuidgen >/etc/machine-id && chmod 644 /etc/machine-id
+}
+
+initd=(
+    dbus
+    #pulseaudio-enable-autospawn
+    #rsyslog
+)
+
+initd+=(${INITD})
+
+##for i in "${initd[@]}"; do
+#    srvctl "${i}" start
+#done

@@ -71,10 +71,11 @@ chmod +x "${buildDir}"/minitBaseSetup/utils/scripts/*
 
 cp "${buildDir}"/minitBaseSetup/utils/scripts/* /bin
 
-bashrcSource='listSourceFiles=($(ls /bin/utils))
+bashrcSource='export PATH="$PATH:/bin/utils"
+listSourceFiles=($(ls /bin/utils))
 for file in "${listSourceFiles[@]}"; do
         source $(which ${file})
 done'
 
-find "${buildDir}"/minitBaseSetup/utils/ -maxdept 1 -type f -exec cp {} /bin/utils \;
+find "${buildDir}"/minitBaseSetup/utils/ -maxdepth 1 -type f -exec cp {} /bin/utils \;
 echo "${bashrcSource}" >> ~/.bashrc
