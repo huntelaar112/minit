@@ -26,17 +26,13 @@ ln -sf /bin/true /sbin/initctl
 #dpkg-divert --local --rename --add /usr/bin/ischroot
 #ln -sf /bin/true /usr/bin/ischroot
 
-$minimal_apt_get_install apt-utils procps
-
-## Install HTTWPS support for APT.
-$minimal_apt_get_install apt-transport-https ca-certificates
-
-## Install add-apt-repository
-$minimal_apt_get_install software-properties-common
-
+## Apt utils
+apt-get install -y apt-utils procps  apt-transport-https ca-certificates software-properties-common
+## Often used tools.
+apt-get install -y curl less vim-tiny psmisc gpg-agent dirmngr nano htop iputils-ping jq kmod wget iproute2 dnsutils
+ln -s /usr/bin/vim.tiny /usr/bin/vim
 ## Upgrade all packages.
-apt-get dist-upgrade -y --no-install-recommends -o Dpkg::Options::="--force-confold"
-
+#apt-get dist-upgrade -y --no-install-recommends -o Dpkg::Options::="--force-confold"
 ## Fix locale.
 case $(lsb_release -is) in
 Ubuntu)
@@ -47,31 +43,18 @@ Debian)
   ;;
 *) ;;
 esac
-
 locale-gen en_US
 update-locale LANG=en_US.UTF-8 LC_CTYPE=en_US.UTF-8
 echo -n en_US.UTF-8 >/etc/container_environment/LANG
 echo -n en_US.UTF-8 >/etc/container_environment/LC_CTYPE
 
-##########################################################################################################
-##########################################################################################################
+##################################################################################################################
+##################################################################################################################
 ### prepare services
 mkdir -p /etc/minit
 mkdir -p /etc/minit_prestart
 #mkdir -p /etc/my_init.pre_shutdown.d
 #mkdir -p /etc/my_init.post_shutdown.d
-mkdir -p /etc/container_environment
-chmod 700 /etc/container_environment
-touch /etc/container_environment.sh
-touch /etc/container_environment.json
-
-groupadd -g 8377 docker_env
-chown :docker_env /etc/container_environment.sh /etc/container_environment.json
-chmod 640 /etc/container_environment.sh /etc/container_environment.json
-ln -s /etc/container_environment.sh /etc/profile.d/
-
-## Install runit.
-#$minimal_apt_get_install runit
 
 ## Install a syslog daemon and logrotate.
 [ "$DISABLE_SYSLOG" -eq 0 ] && "${buildDir}"/minitBaseSetup/services/syslog-ng/syslog-ng.sh || true
@@ -82,15 +65,16 @@ ln -s /etc/container_environment.sh /etc/profile.d/
 ## Install cron daemon.
 [ "$DISABLE_CRON" -eq 0 ] && "${buildDir}"/minitBaseSetup/services/cron/cron.sh || true
 
-# install runit
+mkdir -p /bin/utils
 
-## Often used tools.
-apt-get install -y curl less vim-tiny psmisc gpg-agent dirmngr nano htop iputils-ping jq kmod wget #resolvconf
-ln -s /usr/bin/vim.tiny /usr/bin/vim
+chmod +x "${buildDir}"/minitBaseSetup/utils/*
+chmod +x "${buildDir}"/minitBaseSetup/utils/scripts/*
+cp "${buildDir}"/minitBaseSetup/utils/scripts/* /bin
 
-## This tool runs a command as another user and sets $HOME.
-#cp /bd_build/bin/setuser /sbin/setuser
-## This tool allows installation of apt packages with automatic cache cleanup.
-chmod +x "${buildDir}"/minitBaseSetup/image-utils
-cp "${buildDir}"/minitBaseSetup/image-utils /bin && echo "source $(which image-utils)" >> ~/.bashrc 
-cat "${buildDir}"/minitBaseSetup/bashrc-utils >> ~/.bashrc 
+bashrcSource='listSourceFiles=($(ls /bin/utils))
+for file in "${listSourceFiles[@]}"; do
+        source $(which ${file})
+done'
+
+find "${buildDir}"/minitBaseSetup/utils/ -type f -exec cp {} /bin/utils \;
+echo "${bashrcSource}" >> ~/.bashrc
