@@ -66,9 +66,9 @@ mkdir -p /etc/minit_prestart
 [ "$DISABLE_CRON" -eq 0 ] && "${buildDir}"/minitBaseSetup/services/cron/cron.sh || true
 
 mkdir -p /bin/utils
-
 chmod +x "${buildDir}"/minitBaseSetup/utils/*
 chmod +x "${buildDir}"/minitBaseSetup/utils/scripts/*
+
 cp "${buildDir}"/minitBaseSetup/utils/scripts/* /bin
 
 bashrcSource='listSourceFiles=($(ls /bin/utils))
@@ -76,5 +76,5 @@ for file in "${listSourceFiles[@]}"; do
         source $(which ${file})
 done'
 
-find "${buildDir}"/minitBaseSetup/utils/ -type f -exec cp {} /bin/utils \;
+find "${buildDir}"/minitBaseSetup/utils/ -maxdept 1 -type f -exec cp {} /bin/utils \;
 echo "${bashrcSource}" >> ~/.bashrc
