@@ -116,7 +116,7 @@ func initConfig() {
 }
 
 func rootRun(cmd *cobra.Command, args []string) {
-
+	var err error
 	global.logDir = viper.GetString("logDir")
 	global.entryDir = viper.GetString("entryDir")
 	global.preStartDir = viper.GetString("preStartDir")
@@ -135,8 +135,14 @@ func rootRun(cmd *cobra.Command, args []string) {
 
 	Logger.Debug("Entry dir: ", global.entryDir)
 	Logger.Debug("Pre start dir: ", global.preStartDir)
-	global.etc_minit_cmds = GetOsCmdInDir(global.entryDir)
-	global.etc_minit_prestart_cmds = GetOsCmdInDir(global.preStartDir)
+	global.etc_minit_cmds, err = GenExecCmds(global.entryDir)
+	if err != nil {
+		Logger.Error(err)
+	}
+	global.etc_minit_prestart_cmds, err = GenExecCmds(global.preStartDir)
+	if err != nil {
+		Logger.Error(err)
+	}
 
 	if os.Getpid() == 1 {
 		go Reap()
@@ -151,6 +157,9 @@ func rootRun(cmd *cobra.Command, args []string) {
 	//}
 	RunCmds(global.etc_minit_cmds, global.procs)
 	Wait(global.procs)
+
+	// grep all kill all process after quit
+	ProcessKillAll()
 }
 
 // run all cmd, if one end or error die --> print log
@@ -227,7 +236,9 @@ func PreStartCmdsRun(cmds []*exec.Cmd, procs *Procs, wg *sync.WaitGroup) {
 }
 
 func Wait(procs *Procs) {
-	defer func() { Logger.Info("all processes exited, goodbye!") }()
+	defer func() {
+		Logger.Info("all processes (start at /etc/minit) exited --> kill all process start with srvctl --> goodbye!")
+	}()
 
 	// wait trigger of interrupt signal
 	ints := make(chan os.Signal, 2)
@@ -256,19 +267,7 @@ func Wait(procs *Procs) {
 	}
 }
 
-func GetOsCmdInDir(dirname string) []*exec.Cmd {
-	var err error
-	listDirEtcMinit, _ := utils.DirAllChild(dirname)
-	cmds, err := BashSourceAllFileInDir2ExecCmd(dirname)
-	if err != nil {
-		Logger.Info(err)
-	} else {
-		Logger.Info("List file at: ", dirname, ": ", listDirEtcMinit)
-	}
-	return cmds
-}
-
-func BashSourceAllFileInDir2ExecCmd(dirPath string) ([]*exec.Cmd, error) {
+func GenExecCmds(dirPath string) ([]*exec.Cmd, error) {
 	var cmd *exec.Cmd
 	var cmds []*exec.Cmd
 	// search file in entryDir
@@ -292,5 +291,12 @@ func BashSourceAllFileInDir2ExecCmd(dirPath string) ([]*exec.Cmd, error) {
 		cmd = exec.Command("bash", "-c", fileName)
 		cmds = append(cmds, cmd)
 	}
+
+	if err != nil {
+		Logger.Info(err)
+	} else {
+		Logger.Info("List file at: ", dirPath, ": ", listEntryFile)
+	}
+
 	return cmds, err
 }
