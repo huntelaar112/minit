@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"sort"
 	"sync"
 	"syscall"
 	"time"
@@ -150,11 +151,14 @@ func rootRun(cmd *cobra.Command, args []string) {
 
 	Logger.Debugf("number of minit command: %d, ", len(global.etc_minit_cmds))
 	Logger.Debugf("number of prestart command: %d, ", len(global.etc_minit_prestart_cmds))
+
 	//if len(global.etc_minit_prestart_cmds) > 0 {
-	global.wgPostPreStart.Add(1)
-	go PreStartCmdsRun(global.etc_minit_prestart_cmds, global.procs, &global.wgPostPreStart)
-	global.wgPostPreStart.Wait()
+	/* 	global.wgPostPreStart.Add(1)
+	   	go PreStartCmdsRun(global.etc_minit_prestart_cmds, global.procs, &global.wgPostPreStart)
+	   	global.wgPostPreStart.Wait() */
+	PreStartCmdsRun(global.etc_minit_prestart_cmds, global.procs)
 	//}
+
 	RunCmds(global.etc_minit_cmds, global.procs)
 	Wait(global.procs)
 
@@ -196,7 +200,7 @@ func RunCmds(cmds []*exec.Cmd, procs *Procs) {
 	}
 }
 
-func PreStartCmdsRun(cmds []*exec.Cmd, procs *Procs, wg *sync.WaitGroup) {
+/* func PreStartCmdsRun(cmds []*exec.Cmd, procs *Procs, wg *sync.WaitGroup) {
 	defer wg.Done()
 	var prestartProcessWg sync.WaitGroup
 	for i := range cmds {
@@ -233,6 +237,21 @@ func PreStartCmdsRun(cmds []*exec.Cmd, procs *Procs, wg *sync.WaitGroup) {
 		}()
 	}
 	prestartProcessWg.Wait()
+} */
+
+// start cmd sequentially
+func PreStartCmdsRun(cmds []*exec.Cmd, procs *Procs) {
+	for i := range cmds {
+		cmd := cmds[i]
+		if err := cmd.Start(); err != nil {
+			Logger.Error("process failed to start: ", err)
+			//procs.Cleanup(syscall.SIGINT, global.timeout2Kill)
+			continue
+		}
+		pid := cmd.Process.Pid
+		Logger.Info("pid ", pid, " started: ", cmd.Args)
+		procs.Insert(cmd)
+	}
 }
 
 func Wait(procs *Procs) {
@@ -285,6 +304,8 @@ func GenExecCmds(dirPath string) ([]*exec.Cmd, error) {
 		//Logger.Info(global.logDir, ": Entry_directory is empty.")
 		return cmds, fmt.Errorf("%s is empty", dirPath)
 	}
+
+	sort.Strings(listEntryFile)
 
 	for _, fileName := range listEntryFile {
 		os.Chmod(fileName, 0775)
