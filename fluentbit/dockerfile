@@ -1,0 +1,43 @@
+ARG USER=root BUILDDIR="/build" MINIBASESETUP="/build/minitBaseSetup"
+
+FROM golang:1.21.6-bookworm as build
+ARG USER BUILDDIR
+CMD /bin/bash
+COPY .. ${BUILDDIR}
+#WORKDIR /build-minit 
+
+RUN cd ${BUILDDIR} && go build -o minit
+
+
+################################################
+FROM debian:12.5
+LABEL maintainer "khacman98@gmail.com"
+LABEL source "https://github.com/huntelaar112/minit.git"
+LABEL branch "main"
+
+ARG USER BUILDDIR MINIBASESETUP EXPOSE_PORT="2020 22"
+ENV TZ=Asia/Ho_Chi_Minh
+
+ENV DEBIAN_FRONTEND="teletype" \
+    LANG="en_US.UTF-8" \
+    LANGUAGE="en_US:en" \
+    LC_ALL="en_US.UTF-8" \
+    CODENAME="bookworm"
+
+COPY --from=build ${BUILDDIR} ${BUILDDIR} 
+
+#RUN apt-get dist-upgrade -y --no-install-recommends -o Dpkg::Options::="--force-confold"
+RUN chmod +x ${BUILDDIR}/buildconfig && cp ${BUILDDIR}/buildconfig /bin && cp ${BUILDDIR}/minit /bin && \
+    ${MINIBASESETUP}/imagePrepare.sh 
+
+RUN echo "deb [signed-by=/usr/share/keyrings/fluentbit-keyring.gpg] https://packages.fluentbit.io/debian/${CODENAME} ${CODENAME} main" > /etc/apt/sources.list.d/fluentbit.list && \
+    curl https://packages.fluentbit.io/fluentbit.key | gpg --dearmor > /usr/share/keyrings/fluentbit-keyring.gpg && \
+    apt update && apt-get install -y fluent-bit
+
+RUN chmod +x /build/fluentbit/10_fluentbit.minit \
+    && cp /build/fluentbit/10_fluentbit.minit /etc/minit/10_fluentbit.minit
+
+RUN ${MINIBASESETUP}/imageCleanup.sh
+
+EXPOSE ${EXPOSE_PORT}
+ENTRYPOINT ["/bin/minit"]

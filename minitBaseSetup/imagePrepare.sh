@@ -27,9 +27,9 @@ ln -sf /bin/true /sbin/initctl
 #ln -sf /bin/true /usr/bin/ischroot
 
 ## Apt utils
-apt-get install -y apt-utils procps  apt-transport-https ca-certificates software-properties-common
+apt-get install -y apt-utils procps  apt-transport-https ca-certificates software-properties-common 
 ## Often used tools.
-apt-get install -y curl less vim-tiny psmisc gpg-agent dirmngr nano htop iputils-ping jq kmod wget iproute2 dnsutils
+apt-get install -y curl less vim-tiny psmisc gpg-agent dirmngr nano htop iputils-ping jq kmod wget iproute2 dnsutils gnupg2
 ln -s /usr/bin/vim.tiny /usr/bin/vim
 ## Upgrade all packages.
 #apt-get dist-upgrade -y --no-install-recommends -o Dpkg::Options::="--force-confold"
