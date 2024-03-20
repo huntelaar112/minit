@@ -10,7 +10,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"sort"
-	"sync"
 	"syscall"
 	"time"
 
@@ -26,7 +25,7 @@ type Global struct {
 	entryDir    string
 	preStartDir string
 
-	wgPostPreStart sync.WaitGroup
+	//wgPostPreStart sync.WaitGroup
 
 	procs                   *Procs
 	prim                    *Primary
@@ -166,7 +165,13 @@ func rootRun(cmd *cobra.Command, args []string) {
 	ProcessKillAll()
 }
 
-// run all cmd, if one end or error die --> print log
+/*
+	run all cmd parallel
+
+if one end or error die --> print log
+
+if all die --> end function
+*/
 func RunCmds(cmds []*exec.Cmd, procs *Procs) {
 	for i := range cmds {
 		cmd := cmds[i]
@@ -256,7 +261,7 @@ func PreStartCmdsRun(cmds []*exec.Cmd, procs *Procs) {
 
 func Wait(procs *Procs) {
 	defer func() {
-		Logger.Info("all processes (start at /etc/minit) exited --> kill all process start with srvctl --> goodbye!")
+		Logger.Info("all processes (start at /etc/minit) exited --> start ProcessKillAll() --> goodbye!")
 	}()
 
 	// wait trigger of interrupt signal
