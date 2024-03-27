@@ -26,6 +26,7 @@ SYSLOGNG_OPTS=""
 [ -r /etc/default/syslog-ng ] && source /etc/default/syslog-ng
 
 syslogng_wait() {
+    # if fail to run: /usr/sbin/syslog-ng --pidfile "$PIDFILE" -F "$SYSLOGNG_OPTS" &
     if [ "$2" -ne 0 ]; then
         return 1
     fi
@@ -34,7 +35,8 @@ syslogng_wait() {
     for i in $(seq 1 30); do
         status=0
         syslog-ng-ctl stats >/dev/null 2>&1 || status=$?
-        if [ "$status" != "$1" ]; then
+        # if syslog-ng-ctl stats >/dev/null 2>&1 return != 0
+        if [ "$status" != "$1" ]; then 
             RET=0
             break
         fi
@@ -43,5 +45,6 @@ syslogng_wait() {
     return $RET
 }
 
-/usr/sbin/syslog-ng --pidfile "$PIDFILE" -F "$SYSLOGNG_OPTS" &
-syslogng_wait 1 $?
+# start syslog-ng with specific pid file and options in source /etc/default/syslog-ng
+exec /usr/sbin/syslog-ng --pidfile "$PIDFILE" -F "$SYSLOGNG_OPTS" & 
+#syslogng_wait 1 $?
