@@ -5,7 +5,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 export minimal_apt_get_install='apt-get install -y --no-install-recommends'
 
-DISABLE_SYSLOG=1
+#DISABLE_SYSLOG=1
 #DISABLE_SSH=1
 
 # Default services

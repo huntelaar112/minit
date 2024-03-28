@@ -12,7 +12,7 @@ mkdir -p /etc/service/sshd
 touch /etc/service/sshd/down
 mkdir -p /etc/ssh
 
-cp "${SSHD_BUILD_PATH}"/sshd.minit "${etcServiceDir}"
+cp "${SSHD_BUILD_PATH}"/sshd.minit "${etcServiceDir}/02_sshd.minit"
 #cp "${SSHD_BUILD_PATH}"/sshd_config /etc/ssh/sshd_config
 cp "${SSHD_BUILD_PATH}"/00_genSshKeys.sh "${etcServicePreStartDir}"
 

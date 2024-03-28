@@ -248,7 +248,7 @@ func RunCmds(cmds []*exec.Cmd, procs *Procs) {
 func PreStartCmdsRun(cmds []*exec.Cmd, procs *Procs) {
 	for i := range cmds {
 		cmd := cmds[i]
-		if err := cmd.Start(); err != nil {
+		if err := cmd.Run(); err != nil {
 			Logger.Error("process failed to start: ", err)
 			//procs.Cleanup(syscall.SIGINT, global.timeout2Kill)
 			continue

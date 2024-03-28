@@ -46,5 +46,5 @@ syslogng_wait() {
 }
 
 # start syslog-ng with specific pid file and options in source /etc/default/syslog-ng
-exec /usr/sbin/syslog-ng --pidfile "$PIDFILE" -F "$SYSLOGNG_OPTS" & 
-#syslogng_wait 1 $?
+/usr/sbin/syslog-ng --pidfile "$PIDFILE" -F "$SYSLOGNG_OPTS" & 
+exec syslogng_wait 1 $?
